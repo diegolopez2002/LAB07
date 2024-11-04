@@ -48,13 +48,19 @@ var brush = d3.brush()
     .on("end", brushend);
 
 var colorAttribute = 'cylinders';
-
 d3.select("#colorAttrSelector").on("change", function() {
     colorAttribute = d3.select(this).property("value");
-    updateCells(); 
+    updateCells(); // Call to re-render cells with the updated color scheme
 });
 
-    
+function updateCells() {
+    cells.forEach(function(cell) {
+        chartG.select('.cell-' + cell.row + '-' + cell.col)
+            .each(function() {
+                cell.update(this, cars); // 'cars' is the dataset variable
+            });
+    });
+}
 // ****** Add reusable components here ****** //
 var cells = [];
 dataAttributes.forEach(function(attrX, col){
@@ -88,15 +94,14 @@ SplomCell.prototype.update = function(g, data) {
     yScale.domain(extentByAttribute[this.y]);
     // Determine the color scale based on the selected colorAttribute
     if (colorAttribute === 'cylinders') {
-        // Use a categorical color scale for 'cylinders'
+        // Use categorical color scale for discrete values
         colorScale = d3.scaleOrdinal(d3.schemeCategory10)
                        .domain([...new Set(data.map(d => d[colorAttribute]))]);
     } else {
-        // Use a continuous color scale for other numeric attributes
+        // Use continuous color scale for numerical attributes
         colorScale = d3.scaleSequential(d3.interpolateBlues)
                        .domain(extentByAttribute[colorAttribute]);
     }
-
     // Save a reference of this SplomCell, to use within anon function scopes
     var _this = this;
 
