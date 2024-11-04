@@ -79,17 +79,7 @@ SplomCell.prototype.update = function(g, data) {
     // Update the global x,yScale objects for this cell's x,y attribute domains
     xScale.domain(extentByAttribute[this.x]);
     yScale.domain(extentByAttribute[this.y]);
-    // Determine the color scale based on the selected colorAttribute
-    if (colorAttribute === 'cylinders') {
-        // Use categorical color scale for discrete values
-        colorScale = d3.scaleOrdinal(d3.schemeCategory10)
-                       .domain([...new Set(data.map(d => d[colorAttribute]))]);
-    } else {
-        // Use continuous color scale for numerical attributes
-        colorScale = d3.scaleSequential(d3.interpolateBlues)
-                       .domain(extentByAttribute[colorAttribute]);
-    }
-    // Save a reference of this SplomCell, to use within anon function scopes
+	
     var _this = this;
 
     var dots = cell.selectAll('.dot')
