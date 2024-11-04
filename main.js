@@ -47,19 +47,7 @@ var brush = d3.brush()
     .on("brush", brushmove)
     .on("end", brushend);
  var colorAttribute = d3.select(this).property("value");
-d3.select("#colorAttrSelector").on("change", function() {
-    colorAttribute = d3.select(this).property("value");
-    updateCells(); // Call to re-render cells with the updated color scheme
-});
 
-function updateCells() {
-    cells.forEach(function(cell) {
-        chartG.select('.cell-' + cell.row + '-' + cell.col)
-            .each(function() {
-                cell.update(this, cars); // 'cars' is the dataset variable
-            });
-    });
-}
 // ****** Add reusable components here ****** //
 var cells = [];
 dataAttributes.forEach(function(attrX, col){
