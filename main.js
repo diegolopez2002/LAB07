@@ -8,6 +8,7 @@ var toolTip = d3.tip()
              + "<tbody><tr><td>"+d['economy (mpg)']+"</td><td colspan='2'>"+d['displacement (cc)']+"</td><td>"+d['weight (lb)']+"</td></tr></tbody></table>"
     });
 
+
 var svg = d3.select('svg');
 svg.call(toolTip);
 
