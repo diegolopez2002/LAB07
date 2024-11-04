@@ -8,7 +8,6 @@ var toolTip = d3.tip()
              + "<tbody><tr><td>"+d['economy (mpg)']+"</td><td colspan='2'>"+d['displacement (cc)']+"</td><td>"+d['weight (lb)']+"</td></tr></tbody></table>"
     });
 
-
 var svg = d3.select('svg');
 svg.call(toolTip);
 
@@ -97,16 +96,24 @@ SplomCell.prototype.update = function(g, data) {
         dotsEnter.on('mouseover', toolTip.show)
     .on('mouseout', toolTip.hide);
 
+
     dots.merge(dotsEnter).attr('cx', function(d){
             return xScale(d[_this.x]);
         })
         .attr('cy', function(d){
             return yScale(d[_this.y]);
         })
-        .style('fill', function(d) { return colorScale(d.colorAttribute); });
+        .style('fill', function(d) { return colorScale(d[colorAttribute]); });
 
 
     dots.exit().remove();
+}
+
+function updateCells() {
+    cells.forEach(function(cell) {
+        var g = chartG.select(`g.cell-${cell.row}-${cell.col}`);
+        cell.update(g.node(), cars);
+    });
 }
 
 d3.csv('cars.csv', dataPreprocessor).then(function(dataset) {
@@ -120,6 +127,7 @@ d3.csv('cars.csv', dataPreprocessor).then(function(dataset) {
             });
         });
 
+        updateColorScaleDomain(cars);
         // Pre-render gridlines and labels
         chartG.selectAll('.x.axis')
             .data(dataAttributes)
@@ -255,7 +263,7 @@ function updateColorScale() {
     } else {
         // Numerical data - use a sequential or linear color scale
         colorScale = d3.scaleSequential(d3.interpolateBlues) // Adjust color scheme if desired
-            .domain(d3.extent(cars, function(d) { return +d[colorAttribute]; }));
+            .domain(d3.extent(cars, function(d) { return d[colorAttribute]; }));
     }
     
     // Re-render cells with updated color attribute
