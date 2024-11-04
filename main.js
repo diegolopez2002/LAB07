@@ -46,7 +46,6 @@ var brush = d3.brush()
     .on("start", brushstart)
     .on("brush", brushmove)
     .on("end", brushend);
- var colorAttribute = d3.select(this).property("value");
 
 // ****** Add reusable components here ****** //
 var cells = [];
@@ -79,7 +78,12 @@ SplomCell.prototype.update = function(g, data) {
     // Update the global x,yScale objects for this cell's x,y attribute domains
     xScale.domain(extentByAttribute[this.x]);
     yScale.domain(extentByAttribute[this.y]);
-	
+    
+    if (attribute !== 'cylinders') {
+        colorScale = d3.scaleSequential(d3.interpolateBlues)
+                       .domain(extentByAttribute[colorAttribute]);
+    }
+    // Save a reference of this SplomCell, to use within anon function scopes
     var _this = this;
 
     var dots = cell.selectAll('.dot')
@@ -90,7 +94,7 @@ SplomCell.prototype.update = function(g, data) {
     var dotsEnter = dots.enter()
         .append('circle')
         .attr('class', 'dot')
-        .style("fill", function(d) { return colorScale(colorAttribute); })
+        .style("fill", function(d) { return colorScale(attribute); })
         .attr('r', 4);
 
         dotsEnter.on('mouseover', toolTip.show)
@@ -103,7 +107,24 @@ SplomCell.prototype.update = function(g, data) {
         .attr('cy', function(d){
             return yScale(d[_this.y]);
         })
-        .style('fill', function(d) { return colorScale(d[colorAttribute]); });
+        .style('fill', function(d) { return colorScale(d[colorScale]); });
+
+    if( dataAttributes === 'economy (mpg)' ){
+
+        colorScale = d3.scaleSequential(d3.interpolateBlues)
+                   .domain(extentByAttribute[colorAttribute]);
+
+        dots.merge(dotsEnter).attr('cx', function(d){
+            return xScale(d[_this.x]);
+        })
+        .attr('cy', function(d){
+            return yScale(d[_this.y]);
+        })
+        .style('fill', function(d) { return colorScale(d[colorScale]); });
+
+    }
+
+    
     dots.exit().remove();
 }
 
@@ -246,4 +267,3 @@ function dataPreprocessor(row) {
         'year': +row['year']
     };
 }
-
