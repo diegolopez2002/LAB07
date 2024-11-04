@@ -46,8 +46,7 @@ var brush = d3.brush()
     .on("start", brushstart)
     .on("brush", brushmove)
     .on("end", brushend);
-
-var colorAttribute = 'cylinders';
+ var colorAttribute = d3.select(this).property("value");
 d3.select("#colorAttrSelector").on("change", function() {
     colorAttribute = d3.select(this).property("value");
     updateCells(); // Call to re-render cells with the updated color scheme
@@ -113,7 +112,7 @@ SplomCell.prototype.update = function(g, data) {
     var dotsEnter = dots.enter()
         .append('circle')
         .attr('class', 'dot')
-        .style("fill", function(d) { return colorScale(d.cylinders); })
+        .style("fill", function(d) { return colorScale(colorAttribute); })
         .attr('r', 4);
 
         dotsEnter.on('mouseover', toolTip.show)
