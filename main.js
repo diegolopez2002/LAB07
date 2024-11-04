@@ -125,6 +125,15 @@ SplomCell.prototype.update = function(g, data) {
     dots.exit().remove();
 }
 
+function updateCells() {
+    cells.forEach(function(cell) {
+        chartG.select('.cell-' + cell.row + '-' + cell.col)
+            .each(function() {
+                cell.update(this, cars);
+            });
+    });
+}
+
 d3.csv('cars.csv', dataPreprocessor).then(function(dataset) {
     
         cars = dataset;
@@ -256,11 +265,3 @@ function dataPreprocessor(row) {
     };
 }
 
-function updateCells() {
-    cells.forEach(function(cell) {
-        chartG.select('.cell-' + cell.row + '-' + cell.col)
-            .each(function() {
-                cell.update(this, cars);
-            });
-    });
-}
