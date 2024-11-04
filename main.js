@@ -47,7 +47,14 @@ var brush = d3.brush()
     .on("brush", brushmove)
     .on("end", brushend);
 
-   
+var colorAttribute = 'cylinders';
+
+d3.select("#colorAttrSelector").on("change", function() {
+    colorAttribute = d3.select(this).property("value");
+    updateCells(); 
+});
+
+    
 // ****** Add reusable components here ****** //
 var cells = [];
 dataAttributes.forEach(function(attrX, col){
@@ -55,6 +62,7 @@ dataAttributes.forEach(function(attrX, col){
         cells.push(new SplomCell(attrX, attrY, col, row));
     });
 });
+
 
 function SplomCell(x, y, col, row) {
     this.x = x;
@@ -78,10 +86,20 @@ SplomCell.prototype.update = function(g, data) {
     // Update the global x,yScale objects for this cell's x,y attribute domains
     xScale.domain(extentByAttribute[this.x]);
     yScale.domain(extentByAttribute[this.y]);
+    // Determine the color scale based on the selected colorAttribute
+    if (colorAttribute === 'cylinders') {
+        // Use a categorical color scale for 'cylinders'
+        colorScale = d3.scaleOrdinal(d3.schemeCategory10)
+                       .domain([...new Set(data.map(d => d[colorAttribute]))]);
+    } else {
+        // Use a continuous color scale for other numeric attributes
+        colorScale = d3.scaleSequential(d3.interpolateBlues)
+                       .domain(extentByAttribute[colorAttribute]);
+    }
 
     // Save a reference of this SplomCell, to use within anon function scopes
     var _this = this;
-    colorScale.domain([...new Set(data.map(d => d[colorAttribute]))]);
+
     var dots = cell.selectAll('.dot')
         .data(data, function(d){
             return d.name +'-'+d.year+'-'+d.cylinders; // Create a unique id for the car
@@ -104,16 +122,7 @@ SplomCell.prototype.update = function(g, data) {
             return yScale(d[_this.y]);
         })
         .style('fill', function(d) { return colorScale(d[colorAttribute]); });
-
-
     dots.exit().remove();
-}
-
-function updateCells() {
-    cells.forEach(function(cell) {
-        var g = chartG.select(`g.cell-${cell.row}-${cell.col}`);
-        cell.update(g.node(), cars);
-    });
 }
 
 d3.csv('cars.csv', dataPreprocessor).then(function(dataset) {
@@ -126,8 +135,6 @@ d3.csv('cars.csv', dataPreprocessor).then(function(dataset) {
                 return d[attribute];
             });
         });
-
-        updateColorScaleDomain(cars);
         // Pre-render gridlines and labels
         chartG.selectAll('.x.axis')
             .data(dataAttributes)
@@ -164,7 +171,7 @@ d3.csv('cars.csv', dataPreprocessor).then(function(dataset) {
 
 
         // ********* Your data dependent code goes here *********//
-        var cellEnter = chartG.selectAll('.cell')
+    var cellEnter = chartG.selectAll('.cell')
     .data(cells)
     .enter()
     .append('g')
@@ -235,43 +242,6 @@ function brushend() {
 
 // Remember code outside of the data callback function will run before the data loads
 
-var colorAttributes = ['cylinders', 'year', 'economy (mpg)', 'displacement (cc)']; // Attributes available for coloring
-var colorMenu = d3.select('body').append('select')
-    .attr('id', 'colorAttribute')
-    .on('change', updateColorScale); // Event listener for selection change
-
-colorMenu.selectAll('option')
-    .data(colorAttributes)
-    .enter()
-    .append('option')
-    .attr('value', function(d) { return d; })
-    .text(function(d) { return d; });
-
-// Initialize colorScale based on initial attribute
-var colorAttribute = d3.select('#colorAttribute').property('value');
-updateColorScale(); // Call initially to set up the scale
-
-// Update colorScale based on selected attribute
-function updateColorScale() {
-    colorAttribute = d3.select('#colorAttribute').property('value');
-    
-    // Check if the selected attribute is categorical or numerical
-    if (colorAttribute === 'cylinders' || colorAttribute === 'year') {
-        // Categorical data - use an ordinal color scale
-        colorScale = d3.scaleOrdinal(d3.schemeCategory10)
-            .domain([...new Set(cars.map(d => d[colorAttribute]))]);
-    } else {
-        // Numerical data - use a sequential or linear color scale
-        colorScale = d3.scaleSequential(d3.interpolateBlues) // Adjust color scheme if desired
-            .domain(d3.extent(cars, function(d) { return d[colorAttribute]; }));
-    }
-    
-    // Re-render cells with updated color attribute
-    chartG.selectAll('.cell')
-        .each(function(cell) {
-            cell.update(this, cars); // Redraw with updated color
-        });
-}
 
 function dataPreprocessor(row) {
     return {
@@ -284,4 +254,13 @@ function dataPreprocessor(row) {
         '0-60 mph (s)': +row['0-60 mph (s)'],
         'year': +row['year']
     };
+}
+
+function updateCells() {
+    cells.forEach(function(cell) {
+        chartG.select('.cell-' + cell.row + '-' + cell.col)
+            .each(function() {
+                cell.update(this, cars);
+            });
+    });
 }
