@@ -81,7 +81,7 @@ SplomCell.prototype.update = function(g, data) {
 
     // Save a reference of this SplomCell, to use within anon function scopes
     var _this = this;
-
+    colorScale.domain([...new Set(data.map(d => d[colorAttribute]))]);
     var dots = cell.selectAll('.dot')
         .data(data, function(d){
             return d.name +'-'+d.year+'-'+d.cylinders; // Create a unique id for the car
