@@ -54,6 +54,21 @@ dataAttributes.forEach(function(attrX, col){
         cells.push(new SplomCell(attrX, attrY, col, row));
     });
 });
+function updateColorScale(attribute) {
+    if (attribute === "cylinders" || attribute === "year") {
+        return d3.scaleOrdinal(d3.schemeCategory10);
+    } else {
+        return d3.scaleSequential(d3.interpolateInferno)
+            .domain(extentByAttribute[attribute]);
+    }
+}
+
+// Event listener for color attribute selector
+d3.select("#colorAttrSelector").on("change", function() {
+    selectedColorAttr = d3.select(this).property("value");
+    cells.forEach(cell => cell.update(cell.g, cars)); // Re-render cells with new color scale
+});
+
 
 function SplomCell(x, y, col, row) {
     this.x = x;
@@ -89,7 +104,7 @@ SplomCell.prototype.update = function(g, data) {
     var dotsEnter = dots.enter()
         .append('circle')
         .attr('class', 'dot')
-        .style("fill", function(d) { return colorScale(d.cylinders); })
+        .style("fill", function(d) { return colorScale(d[selectedColorAttr]); })
         .attr('r', 4);
 
         dotsEnter.on('mouseover', toolTip.show)
@@ -100,7 +115,9 @@ SplomCell.prototype.update = function(g, data) {
         })
         .attr('cy', function(d){
             return yScale(d[_this.y]);
-        });
+        })
+	.style("fill", d => colorScale(d[selectedColorAttr]));
+	}); 
 
     dots.exit().remove();
 }
