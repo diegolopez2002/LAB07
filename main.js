@@ -47,6 +47,22 @@ var brush = d3.brush()
     .on("brush", brushmove)
     .on("end", brushend);
 
+var selectedColorAttr = "cylinders";
+function updateColorScale(attribute) {
+    if (attribute === "cylinders" || attribute === "year") {
+        colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+    } else {
+        colorScale = d3.scaleSequential(d3.interpolateInferno)
+            .domain(extentByAttribute[attribute]);
+    }
+}
+
+d3.select("#colorAttrSelector").on("change", function() {
+    selectedColorAttr = d3.select(this).property("value");
+    updateColorScale(selectedColorAttr);
+    cells.forEach(cell => cell.update(cell.g, cars)); // Re-render cells with updated color scale
+});
+
 // ****** Add reusable components here ****** //
 var cells = [];
 dataAttributes.forEach(function(attrX, col){
@@ -54,20 +70,9 @@ dataAttributes.forEach(function(attrX, col){
         cells.push(new SplomCell(attrX, attrY, col, row));
     });
 });
-function updateColorScale(attribute) {
-    if (attribute === "cylinders" || attribute === "year") {
-        return d3.scaleOrdinal(d3.schemeCategory10);
-    } else {
-        return d3.scaleSequential(d3.interpolateInferno)
-            .domain(extentByAttribute[attribute]);
-    }
-}
+
 
 // Event listener for color attribute selector
-d3.select("#colorAttrSelector").on("change", function() {
-    selectedColorAttr = d3.select(this).property("value");
-    cells.forEach(cell => cell.update(cell.g, cars)); // Re-render cells with new color scale
-});
 
 
 function SplomCell(x, y, col, row) {
@@ -104,11 +109,9 @@ SplomCell.prototype.update = function(g, data) {
     var dotsEnter = dots.enter()
         .append('circle')
         .attr('class', 'dot')
-        .style("fill", function(d) { return colorScale(d[selectedColorAttr]); })
-        .attr('r', 4);
-
-        dotsEnter.on('mouseover', toolTip.show)
-    .on('mouseout', toolTip.hide);
+        .attr('r', 4)
+        .on('mouseover', toolTip.show)
+        .on('mouseout', toolTip.hide);
 
     dots.merge(dotsEnter).attr('cx', function(d){
             return xScale(d[_this.x]);
@@ -116,8 +119,8 @@ SplomCell.prototype.update = function(g, data) {
         .attr('cy', function(d){
             return yScale(d[_this.y]);
         })
-	.style("fill", d => colorScale(d[selectedColorAttr]));
-	}); 
+	.style('fill', function(d) { return colorScale(d[selectedColorAttr]); });
+
 
     dots.exit().remove();
 }
