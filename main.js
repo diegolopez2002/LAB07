@@ -47,7 +47,6 @@ var brush = d3.brush()
     .on("brush", brushmove)
     .on("end", brushend);
 
-   
 // ****** Add reusable components here ****** //
 var cells = [];
 dataAttributes.forEach(function(attrX, col){
@@ -102,7 +101,7 @@ SplomCell.prototype.update = function(g, data) {
         .attr('cy', function(d){
             return yScale(d[_this.y]);
         })
-        .style('fill', function(d) { return colorScale(d[colorAttribute]); });
+        .style('fill', function(d) { return colorScale(d[dataAttribute]); });
 
 
     dots.exit().remove();
