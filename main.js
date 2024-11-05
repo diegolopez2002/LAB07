@@ -90,7 +90,7 @@ SplomCell.prototype.update = function(g, data) {
     var dotsEnter = dots.enter()
         .append('circle')
         .attr('class', 'dot')
-        .style("fill", function(d) { return colorScale(d.cylinders); })
+        .style("fill", function(d) { return colorScale(d[colorAttribute); })
         .attr('r', 4);
 
         dotsEnter.on('mouseover', toolTip.show)
