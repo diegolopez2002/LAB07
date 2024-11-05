@@ -102,7 +102,7 @@ SplomCell.prototype.update = function(g, data) {
         .attr('cy', function(d){
             return yScale(d[_this.y]);
         })
-        .style('fill', function(d) { return colorScale(d.xAxis); });
+        .style('fill', function(d) { return colorScale(d.schemeCategory10); });
 
 
     dots.exit().remove();
