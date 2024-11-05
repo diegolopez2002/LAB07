@@ -48,13 +48,6 @@ var brush = d3.brush()
     .on("brush", brushmove)
     .on("end", brushend);
 
-document.getElementById('colorAttrSelector').addEventListener('change', function() {
-    var selectedAttribute = this.value;
-    colorAttribute = selectedAttribute;
-    updateVisualization(); 
-});
-
-   
 // ****** Add reusable components here ****** //
 var cells = [];
 dataAttributes.forEach(function(attrX, col){
@@ -233,13 +226,6 @@ function brushend() {
 
 // Remember code outside of the data callback function will run before the data loads
 
-function updateVisualization() {
-    // Call update for each cell to re-render with the new color attribute
-    cells.forEach(function(cell) {
-        var g = chartG.selectAll('.cell').filter((d, i) => i === cell.row * N + cell.col);
-        cell.update(g, cars); // Re-render with the updated color attribute
-    });
-}
 
 function dataPreprocessor(row) {
     return {
