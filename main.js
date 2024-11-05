@@ -1,4 +1,3 @@
-
 var toolTip = d3.tip()
     .attr("class", "d3-tip")
     .offset([-12, 0])
@@ -48,6 +47,7 @@ var brush = d3.brush()
     .on("brush", brushmove)
     .on("end", brushend);
 
+   
 // ****** Add reusable components here ****** //
 var cells = [];
 dataAttributes.forEach(function(attrX, col){
@@ -94,7 +94,7 @@ SplomCell.prototype.update = function(g, data) {
         .attr('r', 4);
 
         dotsEnter.on('mouseover', toolTip.show)
-        .on('mouseout', toolTip.hide);
+    .on('mouseout', toolTip.hide);
 
     dots.merge(dotsEnter).attr('cx', function(d){
             return xScale(d[_this.x]);
@@ -226,6 +226,43 @@ function brushend() {
 
 // Remember code outside of the data callback function will run before the data loads
 
+var colorAttributes = ['cylinders', 'year', 'economy (mpg)', 'displacement (cc)']; // Attributes available for coloring
+var colorMenu = d3.select('body').append('select')
+    .attr('id', 'colorAttribute')
+    .on('change', updateColorScale); // Event listener for selection change
+
+colorMenu.selectAll('option')
+    .data(colorAttributes)
+    .enter()
+    .append('option')
+    .attr('value', function(d) { return d; })
+    .text(function(d) { return d; });
+
+// Initialize colorScale based on initial attribute
+var colorAttribute = d3.select('#colorAttribute').property('value');
+updateColorScale(); // Call initially to set up the scale
+
+// Update colorScale based on selected attribute
+function updateColorScale() {
+    colorAttribute = d3.select('#colorAttribute').property('value');
+    
+    // Check if the selected attribute is categorical or numerical
+    if (colorAttribute === 'cylinders' || colorAttribute === 'year') {
+        // Categorical data - use an ordinal color scale
+        colorScale = d3.scaleOrdinal(d3.schemeCategory10)
+            .domain([...new Set(cars.map(d => d[colorAttribute]))]);
+    } else {
+        // Numerical data - use a sequential or linear color scale
+        colorScale = d3.scaleSequential(d3.interpolateBlues) // Adjust color scheme if desired
+            .domain(d3.extent(cars, function(d) { return +d[colorAttribute]; }));
+    }
+    
+    // Re-render cells with updated color attribute
+    chartG.selectAll('.cell')
+        .each(function(cell) {
+            cell.update(this, cars); // Redraw with updated color
+        });
+}
 
 function dataPreprocessor(row) {
     return {
