@@ -1,3 +1,4 @@
+
 var toolTip = d3.tip()
     .attr("class", "d3-tip")
     .offset([-12, 0])
@@ -47,6 +48,13 @@ var brush = d3.brush()
     .on("brush", brushmove)
     .on("end", brushend);
 
+document.getElementById('colorAttrSelector').addEventListener('change', function() {
+    var selectedAttribute = this.value;
+    colorAttribute = selectedAttribute;
+    updateVisualization(); 
+});
+
+   
 // ****** Add reusable components here ****** //
 var cells = [];
 dataAttributes.forEach(function(attrX, col){
@@ -54,7 +62,6 @@ dataAttributes.forEach(function(attrX, col){
         cells.push(new SplomCell(attrX, attrY, col, row));
     });
 });
-
 
 function SplomCell(x, y, col, row) {
     this.x = x;
@@ -78,11 +85,7 @@ SplomCell.prototype.update = function(g, data) {
     // Update the global x,yScale objects for this cell's x,y attribute domains
     xScale.domain(extentByAttribute[this.x]);
     yScale.domain(extentByAttribute[this.y]);
-    
-    if (attribute !== 'cylinders') {
-        colorScale = d3.scaleSequential(d3.interpolateBlues)
-                       .domain(extentByAttribute[colorAttribute]);
-    }
+
     // Save a reference of this SplomCell, to use within anon function scopes
     var _this = this;
 
@@ -94,12 +97,11 @@ SplomCell.prototype.update = function(g, data) {
     var dotsEnter = dots.enter()
         .append('circle')
         .attr('class', 'dot')
-        .style("fill", function(d) { return colorScale(d.dataAttributes); })
+        .style("fill", function(d) { return colorScale(d.cylinders); })
         .attr('r', 4);
 
         dotsEnter.on('mouseover', toolTip.show)
-    .on('mouseout', toolTip.hide);
-
+        .on('mouseout', toolTip.hide);
 
     dots.merge(dotsEnter).attr('cx', function(d){
             return xScale(d[_this.x]);
@@ -107,34 +109,10 @@ SplomCell.prototype.update = function(g, data) {
         .attr('cy', function(d){
             return yScale(d[_this.y]);
         })
-        .style('fill', function(d) { return colorScale(d[colorScale]); });
+        .style('fill', function(d) { return colorScale(d[colorAttribute]); });
 
-    if( dataAttributes === 'economy (mpg)' ){
 
-        colorScale = d3.scaleSequential(d3.interpolateBlues)
-                   .domain(extentByAttribute[colorAttribute]);
-
-        dots.merge(dotsEnter).attr('cx', function(d){
-            return xScale(d[_this.x]);
-        })
-        .attr('cy', function(d){
-            return yScale(d[_this.y]);
-        })
-        .style('fill', function(d) { return colorScale(d[colorScale]); });
-
-    }
-
-    
     dots.exit().remove();
-}
-
-function updateCells() {
-    cells.forEach(function(cell) {
-        chartG.select('.cell-' + cell.row + '-' + cell.col)
-            .each(function() {
-                cell.update(this, cars);
-            });
-    });
 }
 
 d3.csv('cars.csv', dataPreprocessor).then(function(dataset) {
@@ -147,6 +125,7 @@ d3.csv('cars.csv', dataPreprocessor).then(function(dataset) {
                 return d[attribute];
             });
         });
+
         // Pre-render gridlines and labels
         chartG.selectAll('.x.axis')
             .data(dataAttributes)
@@ -183,7 +162,7 @@ d3.csv('cars.csv', dataPreprocessor).then(function(dataset) {
 
 
         // ********* Your data dependent code goes here *********//
-    var cellEnter = chartG.selectAll('.cell')
+        var cellEnter = chartG.selectAll('.cell')
     .data(cells)
     .enter()
     .append('g')
@@ -254,6 +233,13 @@ function brushend() {
 
 // Remember code outside of the data callback function will run before the data loads
 
+function updateVisualization() {
+    // Call update for each cell to re-render with the new color attribute
+    cells.forEach(function(cell) {
+        var g = chartG.selectAll('.cell').filter((d, i) => i === cell.row * N + cell.col);
+        cell.update(g, cars); // Re-render with the updated color attribute
+    });
+}
 
 function dataPreprocessor(row) {
     return {
